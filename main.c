@@ -1,10 +1,10 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #define ull unsigned long long
 
-typedef struct pixel{
+typedef struct pixel {
     unsigned char red, green, blue;
 } pixel;
 
@@ -16,8 +16,8 @@ typedef struct Node {
 
 ull med_red(pixel **grid, int size, int x, int y) {
     ull red = 0;
-    for(int i = x; i < x + size; ++i) {
-        for(int j = y; j < y + size; ++j) {
+    for (int i = x; i < x + size; ++i) {
+        for (int j = y; j < y + size; ++j) {
             red += (unsigned int)(grid[i][j].red);
         }
     }
@@ -26,8 +26,8 @@ ull med_red(pixel **grid, int size, int x, int y) {
 
 ull med_green(pixel **grid, int size, int x, int y) {
     ull green = 0;
-    for(int i = x; i < x + size; ++i) {
-        for(int j = y; j < y + size; ++j) {
+    for (int i = x; i < x + size; ++i) {
+        for (int j = y; j < y + size; ++j) {
             green += (unsigned int)(grid[i][j].green);
         }
     }
@@ -36,26 +36,25 @@ ull med_green(pixel **grid, int size, int x, int y) {
 
 ull med_blue(pixel **grid, int size, int x, int y) {
     ull blue = 0;
-    for(int i = x; i < x + size; ++i) {
-        for(int j = y; j < y + size; ++j) {
+    for (int i = x; i < x + size; ++i) {
+        for (int j = y; j < y + size; ++j) {
             blue += (unsigned int)(grid[i][j].blue);
         }
     }
     return blue / size / size;
 }
 
-ull mean_func(pixel **grid, int size, int x, int y) {
-    ull red = med_red(grid, size, x, y);
-    ull blue = med_blue(grid, size, x, y);
-    ull green = med_green(grid, size, x, y);
-
+ull mean_func(pixel **grid, int size, int x, int y, ull red, ull green, ull blue) {
     ull mean = 0;
 
-    for(int i = x; i < x + size; ++i) {
-        for(int j = y; j < y + size; ++j) {
-            mean += (red - (unsigned int)(grid[i][j].red)) * (red - (unsigned int)(grid[i][j].red));
-            mean += (green - (unsigned int)(grid[i][j].green)) * (green - (unsigned int)(grid[i][j].green));
-            mean += (blue - (unsigned int)grid[i][j].blue) * (blue - (unsigned int)(grid[i][j].blue));
+    for (int i = x; i < x + size; ++i) {
+        for (int j = y; j < y + size; ++j) {
+            mean += (red - (unsigned int)(grid[i][j].red)) *
+                    (red - (unsigned int)(grid[i][j].red));
+            mean += (green - (unsigned int)(grid[i][j].green)) *
+                    (green - (unsigned int)(grid[i][j].green));
+            mean += (blue - (unsigned int)grid[i][j].blue) *
+                    (blue - (unsigned int)(grid[i][j].blue));
         }
     }
     mean = mean / (3 * size * size);
@@ -69,18 +68,42 @@ ull mean_func(pixel **grid, int size, int x, int y) {
     return mean;
 }
 
-
-node* create_node(pixel *p, int tip) {
-    node* new_node = (node*)malloc(sizeof(node));
-    new_node->tip = tip;
-    (new_node->value).red = p->red;
-    (new_node->value).blue = p->blue;
-    (new_node->value).green = p->green;
+node *create_node() {
+    node *new_node = (node *)malloc(sizeof(node));
+    new_node->tip = 0;
+    (new_node->value).blue = (new_node->value).red = (new_node->value).green = 0;
     new_node->unu = new_node->doi = new_node->trei = new_node->patru = NULL;
     return new_node;
 }
 
-
+void create_arbore(pixel **grid, int size, int x, int y, node *root, ull prag) {
+    ull red = med_red(grid, size, x, y);
+    ull blue = med_blue(grid, size, x, y);
+    ull green = med_green(grid, size, x, y);
+    ull mean = mean_func(grid, size, x, y, red, green, blue);
+    printf("red:%llu   green:%llu   blue:%llu   mean:%llu\n", red, green, blue, mean);
+    root = create_node();
+    if(mean > prag) {
+        root->tip = 0; // nu e frunza
+        size /= 2;
+        printf("cat e size:%d\n", size);
+        // create_arbore(grid, size, x, y, root, 0);
+        // create_arbore(grid, size, x, y + size, root, 0);
+        // create_arbore(grid, size, x + size, y + size, root, 0);
+        // create_arbore(grid, size, x + size, y, root, 0);
+        create_arbore(grid, size, x, y, root->unu, prag);
+        create_arbore(grid, size, x, y + size, root->doi, prag);
+        create_arbore(grid, size, x + size, y + size, root->trei, prag);
+        create_arbore(grid, size, x + size, y, root->patru, prag);
+    }
+    else
+    {
+        root->tip = 1;
+        (root->value).red = red;
+        (root->value).blue = blue;
+        (root->value).green = green;
+    }
+}
 
 int main(int argc, char const *argv[]) {
     // fisierul din care citim(primit ca argument in linia de comanda)
@@ -105,37 +128,44 @@ int main(int argc, char const *argv[]) {
     printf("max_color:%u\n", max_color);
 
     // citim matricea ce reprezinta poza
-    pixel **imag = (pixel **) malloc(height * sizeof(pixel *));
+    pixel **imag = (pixel **)malloc(height * sizeof(pixel *));
 
     char spatiu;
     fscanf(in, "%c", &spatiu);
 
-    for(int i = 0; i < height; ++i) {
-        imag[i] = (pixel *) malloc (width * sizeof(pixel));
-        for(int j = 0; j < width; ++j) {
+    for (int i = 0; i < height; ++i) {
+        imag[i] = (pixel *)malloc(width * sizeof(pixel));
+        for (int j = 0; j < width; ++j) {
             fread(&imag[i][j], sizeof(imag[i][j]), 1, in);
         }
     }
 
     // for(int i = 0; i < height; ++i) {
     //     for(int j = 0; j < width; ++j) {
-    //        fprintf(out, "red:%d   green:%d  blue:%d\n", imag[i][j].red, imag[i][j].green, imag[i][j].blue);
+    //        fprintf(out, "red:%d   green:%d  blue:%d\n", imag[i][j].red,
+    //        imag[i][j].green, imag[i][j].blue);
     //     }
     // }
 
-    //printf("red:%d   green:%d  blue:%d\n", imag[0][200].red, imag[0][200].green, imag[0][200].blue);
-    int factor = 0, size = height;
+    // printf("red:%d   green:%d  blue:%d\n", imag[0][200].red,
+    // imag[0][200].green, imag[0][200].blue);
+    int size = height;
+    ull red = med_red(imag, size, 0, 0);
+    ull blue = med_blue(imag, size, 0, 0);
+    ull green = med_green(imag, size, 0, 0);
+
     node *root = NULL;
+    ull mean = mean_func(imag, size, 0, 0, red, green, blue);
+    ull prag = 0;
 
-    ull mean = mean_func(imag, size, 0, 0);
-    //printf("size:%")
     printf("mean:%llu\n", mean);
-    // if(factor < mean) {
-    //     printf("il separi\n");
-    // }
-    // else
-    //     printf("nu-l separi\n");
+    if (prag < mean) {
+        printf("il separi\n");
 
+    } else {
+        printf("nu-l separi\n");
+    }
 
+    create_arbore(imag, size, 0, 0, root, prag);
     return 0;
 }
