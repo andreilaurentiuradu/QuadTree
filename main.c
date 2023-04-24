@@ -105,6 +105,19 @@ void create_arbore(pixel **grid, int size, int x, int y, node *root, ull prag) {
     }
 }
 
+
+void order(node* root) {
+    if (root) {
+        printf("red: %d ", (root->value).red);
+        printf("green: %d ", (root->value).green);
+        printf("blue: %d\n", (root->value).blue);
+        order(root->unu);
+        order(root->doi);
+        order(root->trei);
+        order(root->patru);
+    }
+}
+
 int main(int argc, char const *argv[]) {
     // fisierul din care citim(primit ca argument in linia de comanda)
     FILE *in = fopen(argv[1], "rb");
@@ -167,5 +180,14 @@ int main(int argc, char const *argv[]) {
     }
 
     create_arbore(imag, size, 0, 0, root, prag);
+    order(root);
     return 0;
 }
+
+/*TO DO
+    1 vezi cate nivele are arborele(bfs e bun si pui un parametru)
+    2 dupa faci celelate 2 chesti de la cerinta 1 tot prin parcurgerea arborelui(bfs e bun)
+    3 vezi ca a aparut checkerul modifici makefileul astfel incat sa testezi checkerul pentru cerinta 1
+    4 treci la cerinta 2(compresia imaginii)
+    5 treci la cerinta 3(decompresia imaginii)
+*/
