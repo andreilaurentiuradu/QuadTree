@@ -10,61 +10,61 @@ typedef struct pixel {
 
 typedef struct Node {
     pixel value;
-    int tip;
+    unsigned char tip;
     struct Node *unu, *doi, *trei, *patru;
 } node;
 
-ull med_red(pixel **grid, int size, int x, int y) {
+ull med_red(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     ull red = 0;
-    for (int i = x; i < x + size; ++i) {
-        for (int j = y; j < y + size; ++j) {
+    for (unsigned int i = x; i < x + size; ++i) {
+        for (unsigned int j = y; j < y + size; ++j) {
             red += (unsigned int)(grid[i][j].red);
         }
     }
     return red / size / size;
 }
 
-ull med_green(pixel **grid, int size, int x, int y) {
+ull med_green(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     ull green = 0;
-    for (int i = x; i < x + size; ++i) {
-        for (int j = y; j < y + size; ++j) {
+    for (unsigned int i = x; i < x + size; ++i) {
+        for (unsigned int j = y; j < y + size; ++j) {
             green += (unsigned int)(grid[i][j].green);
         }
     }
     return green / size / size;
 }
 
-ull med_blue(pixel **grid, int size, int x, int y) {
+ull med_blue(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     ull blue = 0;
-    for (int i = x; i < x + size; ++i) {
-        for (int j = y; j < y + size; ++j) {
+    for (unsigned int i = x; i < x + size; ++i) {
+        for (unsigned int j = y; j < y + size; ++j) {
             blue += (unsigned int)(grid[i][j].blue);
         }
     }
     return blue / size / size;
 }
 
-ull mean_func(pixel **grid, int size, int x, int y, ull red, ull green,
+ull mean_func(pixel **grid, unsigned int size, unsigned int x, unsigned int y, ull red, ull green,
               ull blue) {
     ull mean = 0;
 
-    for (int i = x; i < x + size; ++i) {
-        for (int j = y; j < y + size; ++j) {
+    for (unsigned int i = x; i < x + size; ++i) {
+        for (unsigned int j = y; j < y + size; ++j) {
             mean += (red - (unsigned int)(grid[i][j].red)) *
                     (red - (unsigned int)(grid[i][j].red));
             mean += (green - (unsigned int)(grid[i][j].green)) *
                     (green - (unsigned int)(grid[i][j].green));
-            mean += (blue - (unsigned int)grid[i][j].blue) *
+            mean += (blue - (unsigned int)(grid[i][j].blue)) *
                     (blue - (unsigned int)(grid[i][j].blue));
         }
     }
     mean = mean / (3 * size * size);
 
-    // for(int i = x; i < x + size; ++i) {
-    //     for(int j = y; j < y + size; ++j) {
-    //         printf("%u ", grid[i][j]);
+    // for(unsigned int i = x; i < x + size; ++i) {
+    //     for(unsigned int j = y; j < y + size; ++j) {
+    //         prunsigned intf("%u ", grid[i][j]);
     //     }
-    //     printf("\n");
+    //     prunsigned intf("\n");
     // }
     return mean;
 }
@@ -78,35 +78,34 @@ node *create_node() {
     return new_node;
 }
 
-// int nr_nod = 0;
-void create_arb(pixel **grid, int size, int x, int y, node **root, ull prag,
-                int *size_minim, int *blocks) {
+// unsigned int nr_nod = 0;
+void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y, node **root, ull prag,
+                unsigned int *size_minim, unsigned int *blocks) {
     ull red = med_red(grid, size, x, y);
     ull blue = med_blue(grid, size, x, y);
     ull green = med_green(grid, size, x, y);
     ull mean = mean_func(grid, size, x, y, red, green, blue);
-    // nr_nod++;
-    // printf("nr_nod: %d    red:%llu   green:%llu   blue:%llu
-    // mean:%llu\n",nr_nod, red, green,
-    //  blue, mean);
+
     (*root) = create_node();
-    //(*root)->tip = nr_nod;
     if (mean > prag) {
-        // printf("oare intra aici????\n");
-        (*root)->tip = 0;  // nu e frunza
+        // printf("oare unsigned intra aici????\n");
+        (*root)->tip = '0';  // nu e frunza
         // printf("size este in if:%d\n", size);
         size /= 2;
         // printf("cat e size:%d\n", size);
         create_arb(grid, size, x, y, &(*root)->unu, prag, size_minim, blocks);
-        create_arb(grid, size, x, y + size, &(*root)->doi, prag, size_minim, blocks);
-        create_arb(grid, size, x + size, y + size, &(*root)->trei, prag, size_minim, blocks);
-        create_arb(grid, size, x + size, y, &(*root)->patru, prag, size_minim, blocks);
+        create_arb(grid, size, x, y + size, &(*root)->doi, prag, size_minim,
+                   blocks);
+        create_arb(grid, size, x + size, y + size, &(*root)->trei, prag,
+                   size_minim, blocks);
+        create_arb(grid, size, x + size, y, &(*root)->patru, prag, size_minim,
+                   blocks);
     } else {
         // printf("size este:%d\n", size);
         // creste numarul de blocuri ce respecta pragul
         (*blocks)++;
         if ((*size_minim) > size) (*size_minim) = size;
-        (*root)->tip = 1;
+        (*root)->tip = '1';
         ((*root)->value).red = red;
         ((*root)->value).blue = blue;
         ((*root)->value).green = green;
@@ -115,7 +114,7 @@ void create_arb(pixel **grid, int size, int x, int y, node **root, ull prag,
 
 void order(node *root) {
     if (root != NULL) {
-        // printf("intraaaaa????????????\n");
+        // printf("unsigned intraaaaa????????????\n");
         // printf("nr_nod:%d\n", root->tip);
         order(root->unu);
         order(root->doi);
@@ -142,6 +141,24 @@ ull get_depth(node *root) {
     }
 }
 
+void delete_arb(node *root) {
+    // daca nu ne aflam pe ultimul nivel
+    if (root != NULL) {
+        delete_arb(root->unu);
+        delete_arb(root->doi);
+        delete_arb(root->trei);
+        delete_arb(root->patru);
+        free(root);
+    }
+}
+
+void delete_imag(pixel **grid, unsigned int size) {
+    for(unsigned int i = 0; i < size; ++i) {
+        free(grid[i]);
+    }
+    free(grid);
+}
+
 int main(int argc, char const *argv[]) {
     if (strcmp(argv[1], "-c1") == 0) {
         // fisierul din care citim(primit ca argument in linia de comanda)
@@ -152,80 +169,68 @@ int main(int argc, char const *argv[]) {
 
         // citim tipul fisierului
         char tip_fisier[2];
-        fread(tip_fisier, sizeof(tip_fisier), 1, in);
+        fscanf(in, "%s\n", tip_fisier);
 
         // afisam tipul in out ca sa scap de warning momentan
-        // fprintf(out, "tip_fisier:%s\n", tip_fisier);
-        // printf("tip_fisier:%s\n", tip_fisier);
+        // fprintf intf(out, "tip_fisier:%s\n", tip_fisier);
+        // prunsigned intf("tip_fisier:%s\n", tip_fisier);
 
         unsigned int height, width, max_color;
         fscanf(in, "%u %u %u", &height, &width, &max_color);
 
-        // printf("height:%u\n", height);
-        // printf("width:%u\n", width);
-        // printf("max_color:%u\n", max_color);
+        // prunsigned intf("height:%u\n", height);
+        // prunsigned intf("width:%u\n", width);
+        // prunsigned intf("max_color:%u\n", max_color);
 
-        // citim matricea ce reprezinta poza
+        // citim matricea ce reprezunsigned inta poza
         pixel **imag = (pixel **)malloc(height * sizeof(pixel *));
 
         char spatiu;
+        // citim enterul de dupa
         fscanf(in, "%c", &spatiu);
 
-        for (int i = 0; i < height; ++i) {
+        for (unsigned int i = 0; i < height; ++i) {
             imag[i] = (pixel *)malloc(width * sizeof(pixel));
-            for (int j = 0; j < width; ++j) {
+            for (unsigned int j = 0; j < width; ++j) {
                 fread(&imag[i][j], sizeof(imag[i][j]), 1, in);
             }
         }
 
-        // for(int i = 0; i < height; ++i) {
-        //     for(int j = 0; j < width; ++j) {
-        //        fprintf(out, "red:%d   green:%d  blue:%d\n", imag[i][j].red,
-        //        imag[i][j].green, imag[i][j].blue);
-        //     }
-        // }
-
-        // printf("red:%d   green:%d  blue:%d\n", imag[0][200].red,
+        // prunsigned intf("red:%d   green:%d  blue:%d\n", imag[0][200].red,
         // imag[0][200].green, imag[0][200].blue);
-        int size = height;
+        unsigned int size = height;
         // ull red = med_red(imag, size, 0, 0);
         // ull blue = med_blue(imag, size, 0, 0);
         // ull green = med_green(imag, size, 0, 0);
-
-        node *root = NULL;
         // ull mean = mean_func(imag, size, 0, 0, red, green, blue);
+        node *root = NULL;
         ull prag = atoi(argv[2]);
 
-        // printf("pragul este:%llu\n", prag);
-        // printf("mean:%llu\n", mean);
-        // if (prag < mean) {
-        //     printf("il separi\n");
-
-        // } else {
-        //     printf("nu-l separi\n");
-        // }
-        int size_minim = size, blocks = 0;
+        unsigned int size_minim = size, blocks = 0;
         create_arb(imag, size, 0, 0, &root, prag, &size_minim, &blocks);
-        // printf("root->tip:%d\n", root-> tip);
         order(root);
-        // printf("nr_nivele:%d\n", get_depth(root));
 
-        fprintf(out, "%llu\n", get_depth(root));
+        // printf("nr_nivele:%d\n", get_depth(root));
+        ull levels = get_depth(root);
+        fprintf(out, "%llu\n", levels);
         fprintf(out, "%d\n", blocks);
         fprintf(out, "%d\n", size_minim);
 
-
+        // eliberam memoria si inchidem fisierele
+        delete_arb(root);
+        delete_imag(imag, size);
         fclose(in);
         fclose(out);
     }
+
     return 0;
 }
 
 /*TO DO
-    2 dupa faci celelate 2 chestii de la cerinta 1 tot prin parcurgerea
-   arborelui(bfs e bun)
-   3 vezi ca a aparut checkerul modifici makefileul astfel
-   incat sa testezi checkerul pentru cerinta 1
-   4 treci la cerinta 2(compresia imaginii)
-   5 treci la cerinta 3(decompresia imaginii)
+    2 dupa faci celelate 2 chestii de la cerunsigned inta 1 tot prin parcurgerea
+    arborelui(bfs e bun)
+    3 vezi ca a aparut checkerul modifici makefileul astfel
+    incat sa testezi checkerul pentru cerunsigned inta 1
+    4 treci la cerunsigned inta 2(compresia imaginii)
+    5 treci la cerunsigned inta 3(decompresia imaginii)
 */
