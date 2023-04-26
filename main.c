@@ -16,8 +16,9 @@ typedef struct Node {
 
 ull med_red(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     ull red = 0;
-    for (unsigned int i = x; i < x + size; ++i) {
-        for (unsigned int j = y; j < y + size; ++j) {
+    unsigned int i, j;
+    for (i = x; i < x + size; ++i) {
+        for (j = y; j < y + size; ++j) {
             red += (unsigned int)(grid[i][j].red);
         }
     }
@@ -26,8 +27,9 @@ ull med_red(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
 
 ull med_green(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     ull green = 0;
-    for (unsigned int i = x; i < x + size; ++i) {
-        for (unsigned int j = y; j < y + size; ++j) {
+    unsigned int i, j;
+    for (i = x; i < x + size; ++i) {
+        for (j = y; j < y + size; ++j) {
             green += (unsigned int)(grid[i][j].green);
         }
     }
@@ -36,8 +38,9 @@ ull med_green(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
 
 ull med_blue(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     ull blue = 0;
-    for (unsigned int i = x; i < x + size; ++i) {
-        for (unsigned int j = y; j < y + size; ++j) {
+    unsigned int i, j;
+    for (i = x; i < x + size; ++i) {
+        for (j = y; j < y + size; ++j) {
             blue += (unsigned int)(grid[i][j].blue);
         }
     }
@@ -47,9 +50,9 @@ ull med_blue(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
 ull mean_func(pixel **grid, unsigned int size, unsigned int x, unsigned int y, ull red, ull green,
               ull blue) {
     ull mean = 0;
-
-    for (unsigned int i = x; i < x + size; ++i) {
-        for (unsigned int j = y; j < y + size; ++j) {
+    unsigned int i, j;
+    for (i = x; i < x + size; ++i) {
+        for (j = y; j < y + size; ++j) {
             mean += (red - (unsigned int)(grid[i][j].red)) *
                     (red - (unsigned int)(grid[i][j].red));
             mean += (green - (unsigned int)(grid[i][j].green)) *
@@ -112,27 +115,27 @@ void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
     }
 }
 
-void order(node *root) {
-    if (root != NULL) {
-        // printf("unsigned intraaaaa????????????\n");
-        // printf("nr_nod:%d\n", root->tip);
-        order(root->unu);
-        order(root->doi);
-        order(root->trei);
-        order(root->patru);
-    }
-}
+// void order(node *root) {
+//     if (root != NULL) {
+//         // printf("unsigned intraaaaa????????????\n");
+//         // printf("nr_nod:%d\n", root->tip);
+//         order(root->unu);
+//         order(root->doi);
+//         order(root->trei);
+//         order(root->patru);
+//     }
+// }
 
-ull get_depth(node *root) {
+unsigned int get_depth(node *root) {
     if (root == NULL) {
         return 0;
     } else {
-        ull unu_depth = get_depth(root->unu);
-        ull doi_depth = get_depth(root->doi);
-        ull trei_depth = get_depth(root->trei);
-        ull patru_depth = get_depth(root->patru);
+        unsigned int unu_depth = get_depth(root->unu);
+        unsigned int doi_depth = get_depth(root->doi);
+        unsigned int trei_depth = get_depth(root->trei);
+        unsigned int patru_depth = get_depth(root->patru);
 
-        ull max_depth = unu_depth;
+        unsigned int max_depth = unu_depth;
         if (doi_depth > max_depth) max_depth = doi_depth;
         if (trei_depth > max_depth) max_depth = trei_depth;
         if (patru_depth > max_depth) max_depth = patru_depth;
@@ -153,13 +156,15 @@ void delete_arb(node *root) {
 }
 
 void delete_imag(pixel **grid, unsigned int size) {
-    for(unsigned int i = 0; i < size; ++i) {
+    unsigned int i;
+    for(i = 0; i < size; ++i) {
         free(grid[i]);
     }
     free(grid);
 }
 
 int main(int argc, char const *argv[]) {
+    // facem pentru cerinta 1
     if (strcmp(argv[1], "-c1") == 0) {
         // fisierul din care citim(primit ca argument in linia de comanda)
         FILE *in = fopen(argv[3], "rb");
@@ -171,27 +176,22 @@ int main(int argc, char const *argv[]) {
         char tip_fisier[2];
         fscanf(in, "%s\n", tip_fisier);
 
-        // afisam tipul in out ca sa scap de warning momentan
-        // fprintf intf(out, "tip_fisier:%s\n", tip_fisier);
-        // prunsigned intf("tip_fisier:%s\n", tip_fisier);
-
+        // citim cele 3 informatii
         unsigned int height, width, max_color;
-        fscanf(in, "%u %u %u", &height, &width, &max_color);
+        fscanf(in, "%u %u %u\n", &height, &width, &max_color);
 
-        // prunsigned intf("height:%u\n", height);
-        // prunsigned intf("width:%u\n", width);
-        // prunsigned intf("max_color:%u\n", max_color);
+        // printf("height:%u\n", height);
+        // printf("width:%u\n", width);
+        // printf("max_color:%u\n", max_color);
 
         // citim matricea ce reprezunsigned inta poza
         pixel **imag = (pixel **)malloc(height * sizeof(pixel *));
+        unsigned int i, j;
 
-        char spatiu;
-        // citim enterul de dupa
-        fscanf(in, "%c", &spatiu);
-
-        for (unsigned int i = 0; i < height; ++i) {
+        // citim imaginea din zona binara
+        for (i = 0; i < height; ++i) {
             imag[i] = (pixel *)malloc(width * sizeof(pixel));
-            for (unsigned int j = 0; j < width; ++j) {
+            for (j = 0; j < width; ++j) {
                 fread(&imag[i][j], sizeof(imag[i][j]), 1, in);
             }
         }
@@ -203,18 +203,25 @@ int main(int argc, char const *argv[]) {
         // ull blue = med_blue(imag, size, 0, 0);
         // ull green = med_green(imag, size, 0, 0);
         // ull mean = mean_func(imag, size, 0, 0, red, green, blue);
+        // root va retine radacina arborelui cuaternar
         node *root = NULL;
         ull prag = atoi(argv[2]);
 
         unsigned int size_minim = size, blocks = 0;
         create_arb(imag, size, 0, 0, &root, prag, &size_minim, &blocks);
-        order(root);
+        //order(root);
 
         // printf("nr_nivele:%d\n", get_depth(root));
-        ull levels = get_depth(root);
-        fprintf(out, "%llu\n", levels);
-        fprintf(out, "%d\n", blocks);
-        fprintf(out, "%d\n", size_minim);
+        // parcurgem arborele si aflam nr de nivele
+        unsigned int levels = get_depth(root);
+        fprintf(out, "%u\n", levels);
+        fprintf(out, "%u\n", blocks);
+        fprintf(out, "%u\n", size_minim);
+
+        // printf("nivele: %u\n", levels);
+        // printf("nivele_not_sure: %u\n", size / size_minim);
+        // printf("blocuri: %u\n", blocks);
+        // printf("size_minim: %u\n", size_minim);
 
         // eliberam memoria si inchidem fisierele
         delete_arb(root);
