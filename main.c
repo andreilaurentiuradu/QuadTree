@@ -44,7 +44,8 @@ ull med_blue(pixel **grid, int size, int x, int y) {
     return blue / size / size;
 }
 
-ull mean_func(pixel **grid, int size, int x, int y, ull red, ull green, ull blue) {
+ull mean_func(pixel **grid, int size, int x, int y, ull red, ull green,
+              ull blue) {
     ull mean = 0;
 
     for (int i = x; i < x + size; ++i) {
@@ -71,50 +72,70 @@ ull mean_func(pixel **grid, int size, int x, int y, ull red, ull green, ull blue
 node *create_node() {
     node *new_node = (node *)malloc(sizeof(node));
     new_node->tip = 0;
-    (new_node->value).blue = (new_node->value).red = (new_node->value).green = 0;
+    (new_node->value).blue = (new_node->value).red = (new_node->value).green =
+        0;
     new_node->unu = new_node->doi = new_node->trei = new_node->patru = NULL;
     return new_node;
 }
 
-void create_arbore(pixel **grid, int size, int x, int y, node *root, ull prag) {
+int nr_nod = 0;
+void create_arb(pixel **grid, int size, int x, int y, node **root, ull prag) {
     ull red = med_red(grid, size, x, y);
     ull blue = med_blue(grid, size, x, y);
     ull green = med_green(grid, size, x, y);
     ull mean = mean_func(grid, size, x, y, red, green, blue);
-    printf("red:%llu   green:%llu   blue:%llu   mean:%llu\n", red, green, blue, mean);
-    root = create_node();
-    if(mean > prag) {
-        root->tip = 0; // nu e frunza
+    nr_nod++;
+    //printf("nr_nod: %d    red:%llu   green:%llu   blue:%llu   mean:%llu\n",nr_nod, red, green,
+    // blue, mean);
+    (*root) = create_node();
+    //(*root)->tip = nr_nod;
+    if (mean > prag) {
+        // printf("oare intra aici????\n");
+        (*root)->tip = 0;  // nu e frunza
         size /= 2;
-        printf("cat e size:%d\n", size);
+        // printf("cat e size:%d\n", size);
         // create_arbore(grid, size, x, y, root, 0);
         // create_arbore(grid, size, x, y + size, root, 0);
         // create_arbore(grid, size, x + size, y + size, root, 0);
         // create_arbore(grid, size, x + size, y, root, 0);
-        create_arbore(grid, size, x, y, root->unu, prag);
-        create_arbore(grid, size, x, y + size, root->doi, prag);
-        create_arbore(grid, size, x + size, y + size, root->trei, prag);
-        create_arbore(grid, size, x + size, y, root->patru, prag);
-    }
-    else
-    {
-        root->tip = 1;
-        (root->value).red = red;
-        (root->value).blue = blue;
-        (root->value).green = green;
+        create_arb(grid, size, x, y, &(*root)->unu, prag);
+        create_arb(grid, size, x, y + size, &(*root)->doi, prag);
+        create_arb(grid, size, x + size, y + size, &(*root)->trei, prag);
+        create_arb(grid, size, x + size, y, &(*root)->patru, prag);
+    } else {
+        (*root)->tip = 1;
+        ((*root)->value).red = red;
+        ((*root)->value).blue = blue;
+        ((*root)->value).green = green;
     }
 }
 
-
-void order(node* root) {
-    if (root) {
-        printf("red: %d ", (root->value).red);
-        printf("green: %d ", (root->value).green);
-        printf("blue: %d\n", (root->value).blue);
+void order(node *root) {
+    if (root != NULL) {
+        // printf("intraaaaa????????????\n");
+        // printf("nr_nod:%d\n", root->tip);
         order(root->unu);
         order(root->doi);
         order(root->trei);
         order(root->patru);
+    }
+}
+
+int get_depth(node *root) {
+    if (root == NULL) {
+        return 0;
+    } else {
+        int unu_depth = get_depth(root->unu);
+        int doi_depth = get_depth(root->doi);
+        int trei_depth = get_depth(root->trei);
+        int patru_depth = get_depth(root->patru);
+
+        int max_depth = unu_depth;
+        if (doi_depth > max_depth) max_depth = doi_depth;
+        if (trei_depth > max_depth) max_depth = trei_depth;
+        if (patru_depth > max_depth) max_depth = patru_depth;
+
+        return max_depth + 1;
     }
 }
 
@@ -131,14 +152,14 @@ int main(int argc, char const *argv[]) {
 
     // afisam tipul in out ca sa scap de warning momentan
     fprintf(out, "tip_fisier:%s\n", tip_fisier);
-    printf("tip_fisier:%s\n", tip_fisier);
+    //printf("tip_fisier:%s\n", tip_fisier);
 
     unsigned int height, width, max_color;
     fscanf(in, "%u %u %u", &height, &width, &max_color);
 
-    printf("height:%u\n", height);
-    printf("width:%u\n", width);
-    printf("max_color:%u\n", max_color);
+    // printf("height:%u\n", height);
+    // printf("width:%u\n", width);
+    // printf("max_color:%u\n", max_color);
 
     // citim matricea ce reprezinta poza
     pixel **imag = (pixel **)malloc(height * sizeof(pixel *));
@@ -179,15 +200,17 @@ int main(int argc, char const *argv[]) {
         printf("nu-l separi\n");
     }
 
-    create_arbore(imag, size, 0, 0, root, prag);
+    create_arb(imag, size, 0, 0, &root, prag);
+    // printf("root->tip:%d\n", root-> tip);
     order(root);
+    printf("nr_nivele:%d\n", get_depth(root));
     return 0;
 }
 
 /*TO DO
     1 vezi cate nivele are arborele(bfs e bun si pui un parametru)
-    2 dupa faci celelate 2 chesti de la cerinta 1 tot prin parcurgerea arborelui(bfs e bun)
-    3 vezi ca a aparut checkerul modifici makefileul astfel incat sa testezi checkerul pentru cerinta 1
-    4 treci la cerinta 2(compresia imaginii)
-    5 treci la cerinta 3(decompresia imaginii)
+    2 dupa faci celelate 2 chesti de la cerinta 1 tot prin parcurgerea
+   arborelui(bfs e bun) 3 vezi ca a aparut checkerul modifici makefileul astfel
+   incat sa testezi checkerul pentru cerinta 1 4 treci la cerinta 2(compresia
+   imaginii) 5 treci la cerinta 3(decompresia imaginii)
 */
