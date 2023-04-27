@@ -246,13 +246,9 @@ int main(int argc, char const *argv[]) {
             }
         }
 
-        // prunsigned intf("red:%d   green:%d  blue:%d\n", imag[0][200].red,
-        // imag[0][200].green, imag[0][200].blue);
+        // size va fi height sau width fiin matrice patratica
         unsigned int size = height;
-        // ull red = med_red(imag, size, 0, 0);
-        // ull blue = med_blue(imag, size, 0, 0);
-        // ull green = med_green(imag, size, 0, 0);
-        // ull mean = mean_func(imag, size, 0, 0, red, green, blue);
+
         // root va retine radacina arborelui cuaternar
         node *root = NULL;
         ull prag = atoi(argv[2]);
@@ -261,28 +257,19 @@ int main(int argc, char const *argv[]) {
         create_arb(imag, size, 0, 0, &root, prag, &size_minim);
         //order(root);
 
-        // printf("nr_nivele:%d\n", get_depth(root));
         // parcurgem arborele si aflam nr de nivele
         unsigned int levels = get_depth(root);
         unsigned int blocks = 0;
         nr_leaves(root, &blocks);
 
-        printf("%u\n", levels);
-        printf("%u\n", blocks);
-        printf("%u\n", size_minim);
         // nr de nivele din arbore este corect
         fprintf(out, "%u\n", levels);
         // nr de blocuri este nr de frunze(pica testele 4-5, nimeni nu stie dc)
         fprintf(out, "%u\n", blocks);
         // fprintf(out, "\n");
 
-        // latura cea mai mica cand ajung sa fac frunze
+        // latura cea mai mare(practic frunzele de pe cel mai sus nivel)
         fprintf(out, "%u\n", size_minim);
-
-        // printf("nivele: %u\n", levels);
-        // // printf("nivele_not_sure: %u\n", size / size_minim);
-        // printf("blocuri: %u\n", blocks);
-        // printf("size_minim: %u\n", size_minim);
 
         // eliberam memoria si inchidem fisierele
         delete_arb(root);
