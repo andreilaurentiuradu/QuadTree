@@ -67,7 +67,7 @@ ull med_red(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     unsigned int i, j;
     for (i = x; i < x + size; ++i) {
         for (j = y; j < y + size; ++j) {
-            red += (unsigned int)(grid[i][j].red);
+            red += (grid[i][j].red);
         }
     }
     return red / (size * size);
@@ -78,7 +78,7 @@ ull med_green(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     unsigned int i, j;
     for (i = x; i < x + size; ++i) {
         for (j = y; j < y + size; ++j) {
-            green += (unsigned int)(grid[i][j].green);
+            green += (grid[i][j].green);
         }
     }
     return green / (size * size);
@@ -89,7 +89,7 @@ ull med_blue(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     unsigned int i, j;
     for (i = x; i < x + size; ++i) {
         for (j = y; j < y + size; ++j) {
-            blue += (unsigned int)(grid[i][j].blue);
+            blue += (grid[i][j].blue);
         }
     }
     return blue / (size * size);
@@ -101,12 +101,12 @@ ull mean_func(pixel **grid, unsigned int size, unsigned int x, unsigned int y, u
     unsigned int i, j;
     for (i = x; i < x + size; ++i) {
         for (j = y; j < y + size; ++j) {
-            mean += (red - (unsigned int)(grid[i][j].red)) *
-                    (red - (unsigned int)(grid[i][j].red));
-            mean += (green - (unsigned int)(grid[i][j].green)) *
-                    (green - (unsigned int)(grid[i][j].green));
-            mean += (blue - (unsigned int)(grid[i][j].blue)) *
-                    (blue - (unsigned int)(grid[i][j].blue));
+            mean += (red - (grid[i][j].red)) *
+                    (red - (grid[i][j].red));
+            mean += (green - (grid[i][j].green)) *
+                    (green - (grid[i][j].green));
+            mean += (blue - (grid[i][j].blue)) *
+                    (blue - (grid[i][j].blue));
         }
     }
     mean = mean / (3 * size * size);
@@ -123,20 +123,19 @@ node *create_node() {
     return new_node;
 }
 
-// unsigned int nr_nod = 0;
+unsigned int nr_nod = 0;
 void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y, node **root, ull prag,
                 unsigned int *size_minim) {
     ull red = med_red(grid, size, x, y);
     ull blue = med_blue(grid, size, x, y);
     ull green = med_green(grid, size, x, y);
     ull mean = mean_func(grid, size, x, y, red, green, blue);
-    // printf("red:%llu   green:%llu   blue:%llu  mean:%llu\n", red, green, blue, mean);
+    nr_nod++;
+    // printf("nr_nod:%u   red:%llu   green:%llu   blue:%llu  mean:%llu\n", nr_nod, red, green, blue, mean);
     (*root) = create_node();
     // printf("mean:%llu    prag:%llu\n", mean, prag);
     if (mean > prag) {
         (*root)->tip = '0';  // nu e frunza
-        // printf("size este in if:%d\n", size);
-        if ((*size_minim) > size) (*size_minim) = size;
         size /= 2;
         create_arb(grid, size, x, y, &(*root)->unu, prag, size_minim);
         create_arb(grid, size, x, y + size, &(*root)->doi, prag, size_minim);
@@ -146,6 +145,7 @@ void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
     } else {
         // printf("size este:%d\n", size);
         // nr blocuri creste cu 1
+        if ((*size_minim) < size) (*size_minim) = size;
         (*root)->tip = '1';
         ((*root)->value).red = red;
         ((*root)->value).blue = blue;
@@ -165,15 +165,12 @@ void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
 // }
 void nr_leaves(node *root, unsigned int *lvs) {
     if(root != NULL){
-        if(root->tip == '1') {
+        if(root->tip == '1')
             (*lvs)++;
-        }
-        else {
-            nr_leaves(root->unu, lvs);
-            nr_leaves(root->doi, lvs);
-            nr_leaves(root->trei, lvs);
-            nr_leaves(root->patru, lvs);
-        }
+        nr_leaves(root->unu, lvs);
+        nr_leaves(root->doi, lvs);
+        nr_leaves(root->trei, lvs);
+        nr_leaves(root->patru, lvs);
     }
 }
 
@@ -194,6 +191,7 @@ unsigned int get_depth(node *root) {
         return max_depth + 1;
     }
 }
+
 
 // void compresie(node *root, FILE *out) {
 
@@ -232,11 +230,9 @@ int main(int argc, char const *argv[]) {
 
         // citim cele 3 informatii
         unsigned int height, width, max_color;
-        fscanf(in, "%u %u %u\n", &height, &width, &max_color);
-
-        // printf("height:%u\n", height);
-        // printf("width:%u\n", width);
-        // printf("max_color:%u\n", max_color);
+        fscanf(in, "%u %u %u", &height, &width, &max_color);
+        char spatiu;
+        fscanf(in, "%c", &spatiu);
 
         // citim matricea ce reprezunsigned inta poza
         pixel **imag = (pixel **)malloc(height * sizeof(pixel *));
@@ -261,7 +257,7 @@ int main(int argc, char const *argv[]) {
         node *root = NULL;
         ull prag = atoi(argv[2]);
 
-        unsigned int size_minim = size;
+        unsigned int size_minim = 0;
         create_arb(imag, size, 0, 0, &root, prag, &size_minim);
         //order(root);
 
@@ -270,15 +266,18 @@ int main(int argc, char const *argv[]) {
         unsigned int levels = get_depth(root);
         unsigned int blocks = 0;
         nr_leaves(root, &blocks);
-        // nr de nivele din arbore este corect
+
         printf("%u\n", levels);
-
-
-        // nr de blocuri este nr de frunze
-        // fprintf(out, "%u\n", blocks);
+        printf("%u\n", blocks);
+        printf("%u\n", size_minim);
+        // nr de nivele din arbore este corect
+        fprintf(out, "%u\n", levels);
+        // nr de blocuri este nr de frunze(pica testele 4-5, nimeni nu stie dc)
+        fprintf(out, "%u\n", blocks);
         // fprintf(out, "\n");
+
         // latura cea mai mica cand ajung sa fac frunze
-        // fprintf(out, "%u\n", size_minim);
+        fprintf(out, "%u\n", size_minim);
 
         // printf("nivele: %u\n", levels);
         // // printf("nivele_not_sure: %u\n", size / size_minim);
