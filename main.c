@@ -14,6 +14,54 @@ typedef struct Node {
     struct Node *unu, *doi, *trei, *patru;
 } node;
 
+// celulele pentru coada
+// typedef struct qCell {
+//     char *value;
+//     struct qCell *next;
+// } qcell;
+
+// typedef struct Queue {
+//     qcell *front, *tail;
+// } queue;
+
+// queue *initQ() {
+//     queue *q = (queue *)malloc(sizeof(queue));
+//     q->front = q->tail = NULL;
+//     return q;
+// }
+
+// // verificam daca coada este goala
+// int emptyQ(queue *q) {
+//     if (q->front == NULL) return 1;
+//     return 0;
+//     // 1 = empty
+// }
+
+// // stergem din coada
+// void popQ(queue *q) {
+//     qcell *u = q->front;
+//     q->front = u->next;
+
+//     // eliberam memoria alocata pentru campul value(char *) si qcell in sine
+//     free(u->value);
+//     free(u);
+// }
+
+// // adaugam in coada(head, element, element, element, tail)
+// void addQ(queue *q, char *value) {
+//     // cream un nou element de adaugat in coada
+//     qcell *nou = initQCell(value);
+
+//     // verificam daca este primul element de adaugat in coada
+//     if (q->front == NULL) {
+//         q->front = nou;
+//         q->tail = nou;.+
+//     } else {
+//         q->tail->next = nou;
+//         q->tail = nou;
+//     }
+// }
+
 ull med_red(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     ull red = 0;
     unsigned int i, j;
@@ -84,12 +132,12 @@ void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
     ull mean = mean_func(grid, size, x, y, red, green, blue);
     // printf("red:%llu   green:%llu   blue:%llu  mean:%llu\n", red, green, blue, mean);
     (*root) = create_node();
+    // printf("mean:%llu    prag:%llu\n", mean, prag);
     if (mean > prag) {
-        // printf("oare unsigned intra aici????\n");
         (*root)->tip = '0';  // nu e frunza
         // printf("size este in if:%d\n", size);
+        if ((*size_minim) > size) (*size_minim) = size;
         size /= 2;
-        // printf("cat e size:%d\n", size);
         create_arb(grid, size, x, y, &(*root)->unu, prag, size_minim);
         create_arb(grid, size, x, y + size, &(*root)->doi, prag, size_minim);
         create_arb(grid, size, x + size, y + size, &(*root)->trei, prag,
@@ -97,7 +145,7 @@ void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
         create_arb(grid, size, x + size, y, &(*root)->patru, prag, size_minim);
     } else {
         // printf("size este:%d\n", size);
-        if ((*size_minim) > size) (*size_minim) = size;
+        // nr blocuri creste cu 1
         (*root)->tip = '1';
         ((*root)->value).red = red;
         ((*root)->value).blue = blue;
@@ -147,6 +195,9 @@ unsigned int get_depth(node *root) {
     }
 }
 
+// void compresie(node *root, FILE *out) {
+
+// }
 void delete_arb(node *root) {
     // daca nu ne aflam pe ultimul nivel
     if (root != NULL) {
@@ -219,16 +270,18 @@ int main(int argc, char const *argv[]) {
         unsigned int levels = get_depth(root);
         unsigned int blocks = 0;
         nr_leaves(root, &blocks);
-        fprintf(out, "%u\n", levels);
+        // nr de nivele din arbore este corect
+        printf("%u\n", levels);
 
 
         // nr de blocuri este nr de frunze
-        fprintf(out, "%u\n", blocks);
+        // fprintf(out, "%u\n", blocks);
+        // fprintf(out, "\n");
         // latura cea mai mica cand ajung sa fac frunze
-        fprintf(out, "%u\n", size_minim);
+        // fprintf(out, "%u\n", size_minim);
 
         // printf("nivele: %u\n", levels);
-        // printf("nivele_not_sure: %u\n", size / size_minim);
+        // // printf("nivele_not_sure: %u\n", size / size_minim);
         // printf("blocuri: %u\n", blocks);
         // printf("size_minim: %u\n", size_minim);
 
@@ -244,6 +297,7 @@ int main(int argc, char const *argv[]) {
 
 /*TO DO
 // cerinta 2(compresia) pui in binar 0 daca e interior sau 1 si rgb daca e frunza
+    // modifici functiile pentru coada ca sa retina cate un nod
 // cerinta 3(decompresia)
     //1 cand e 0 il bagi in coada
     //2 daca nu e 0 citesti rgb
