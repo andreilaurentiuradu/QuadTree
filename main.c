@@ -22,7 +22,7 @@ ull med_red(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
             red += (unsigned int)(grid[i][j].red);
         }
     }
-    return red / size / size;
+    return red / (size * size);
 }
 
 ull med_green(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
@@ -33,7 +33,7 @@ ull med_green(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
             green += (unsigned int)(grid[i][j].green);
         }
     }
-    return green / size / size;
+    return green / (size * size);
 }
 
 ull med_blue(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
@@ -44,7 +44,7 @@ ull med_blue(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
             blue += (unsigned int)(grid[i][j].blue);
         }
     }
-    return blue / size / size;
+    return blue / (size * size);
 }
 
 ull mean_func(pixel **grid, unsigned int size, unsigned int x, unsigned int y, ull red, ull green,
@@ -63,12 +63,6 @@ ull mean_func(pixel **grid, unsigned int size, unsigned int x, unsigned int y, u
     }
     mean = mean / (3 * size * size);
 
-    // for(unsigned int i = x; i < x + size; ++i) {
-    //     for(unsigned int j = y; j < y + size; ++j) {
-    //         prunsigned intf("%u ", grid[i][j]);
-    //     }
-    //     prunsigned intf("\n");
-    // }
     return mean;
 }
 
@@ -83,12 +77,12 @@ node *create_node() {
 
 // unsigned int nr_nod = 0;
 void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y, node **root, ull prag,
-                unsigned int *size_minim, unsigned int *blocks) {
+                unsigned int *size_minim) {
     ull red = med_red(grid, size, x, y);
     ull blue = med_blue(grid, size, x, y);
     ull green = med_green(grid, size, x, y);
     ull mean = mean_func(grid, size, x, y, red, green, blue);
-
+    // printf("red:%llu   green:%llu   blue:%llu  mean:%llu\n", red, green, blue, mean);
     (*root) = create_node();
     if (mean > prag) {
         // printf("oare unsigned intra aici????\n");
@@ -96,17 +90,13 @@ void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
         // printf("size este in if:%d\n", size);
         size /= 2;
         // printf("cat e size:%d\n", size);
-        create_arb(grid, size, x, y, &(*root)->unu, prag, size_minim, blocks);
-        create_arb(grid, size, x, y + size, &(*root)->doi, prag, size_minim,
-                   blocks);
+        create_arb(grid, size, x, y, &(*root)->unu, prag, size_minim);
+        create_arb(grid, size, x, y + size, &(*root)->doi, prag, size_minim);
         create_arb(grid, size, x + size, y + size, &(*root)->trei, prag,
-                   size_minim, blocks);
-        create_arb(grid, size, x + size, y, &(*root)->patru, prag, size_minim,
-                   blocks);
+                   size_minim);
+        create_arb(grid, size, x + size, y, &(*root)->patru, prag, size_minim);
     } else {
         // printf("size este:%d\n", size);
-        // creste numarul de blocuri ce respecta pragul
-        (*blocks)++;
         if ((*size_minim) > size) (*size_minim) = size;
         (*root)->tip = '1';
         ((*root)->value).red = red;
@@ -125,6 +115,19 @@ void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
 //         order(root->patru);
 //     }
 // }
+void nr_leaves(node *root, unsigned int *lvs) {
+    if(root != NULL){
+        if(root->tip == '1') {
+            (*lvs)++;
+        }
+        else {
+            nr_leaves(root->unu, lvs);
+            nr_leaves(root->doi, lvs);
+            nr_leaves(root->trei, lvs);
+            nr_leaves(root->patru, lvs);
+        }
+    }
+}
 
 unsigned int get_depth(node *root) {
     if (root == NULL) {
@@ -207,15 +210,21 @@ int main(int argc, char const *argv[]) {
         node *root = NULL;
         ull prag = atoi(argv[2]);
 
-        unsigned int size_minim = size, blocks = 0;
-        create_arb(imag, size, 0, 0, &root, prag, &size_minim, &blocks);
+        unsigned int size_minim = size;
+        create_arb(imag, size, 0, 0, &root, prag, &size_minim);
         //order(root);
 
         // printf("nr_nivele:%d\n", get_depth(root));
         // parcurgem arborele si aflam nr de nivele
         unsigned int levels = get_depth(root);
+        unsigned int blocks = 0;
+        nr_leaves(root, &blocks);
         fprintf(out, "%u\n", levels);
+
+
+        // nr de blocuri este nr de frunze
         fprintf(out, "%u\n", blocks);
+        // latura cea mai mica cand ajung sa fac frunze
         fprintf(out, "%u\n", size_minim);
 
         // printf("nivele: %u\n", levels);
@@ -234,10 +243,11 @@ int main(int argc, char const *argv[]) {
 }
 
 /*TO DO
-    2 dupa faci celelate 2 chestii de la cerunsigned inta 1 tot prin parcurgerea
-    arborelui(bfs e bun)
-    3 vezi ca a aparut checkerul modifici makefileul astfel
-    incat sa testezi checkerul pentru cerunsigned inta 1
-    4 treci la cerunsigned inta 2(compresia imaginii)
-    5 treci la cerunsigned inta 3(decompresia imaginii)
+// cerinta 2(compresia) pui in binar 0 daca e interior sau 1 si rgb daca e frunza
+// cerinta 3(decompresia)
+    //1 cand e 0 il bagi in coada
+    //2 daca nu e 0 citesti rgb
+    //3 refaci arborele practic
+    //4 scrii in ppm tipul , sizeurile si 255
+    //
 */
