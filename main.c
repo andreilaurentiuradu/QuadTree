@@ -53,8 +53,8 @@ void popQ(queue *q) {
     q->front = u->next;
 
     // eliberam memoria alocata pentru campul elem(node *) si qcell in sine
-    free(u->elem);
-    free(u);
+    // free(u->elem);
+    // free(u);
 }
 
 // // adaugam in coada(head, element, element, element, tail)
@@ -130,20 +130,20 @@ node *create_node() {
     new_node->unu = new_node->doi = new_node->trei = new_node->patru = NULL;
     return new_node;
 }
-
+// int nr_nod;
 void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
                 node **root, ull prag, unsigned int *size_minim) {
     ull red = med_red(grid, size, x, y);
     ull blue = med_blue(grid, size, x, y);
     ull green = med_green(grid, size, x, y);
     ull mean = mean_func(grid, size, x, y, red, green, blue);
-
+    // ++nr_nod;
     // printf("nr_nod:%u   red:%llu   green:%llu   blue:%llu  mean:%llu\n",
-    // nr_nod, red, green, blue, mean);
+    //  nr_nod, red, green, blue, mean);
     (*root) = create_node();
     // printf("mean:%llu    prag:%llu\n", mean, prag);
     if (mean > prag) {
-        (*root)->tip = '0';  // nu e frunza
+        (*root)->tip = 0;  // nu e frunza
         size /= 2;
         create_arb(grid, size, x, y, &(*root)->unu, prag, size_minim);
         create_arb(grid, size, x, y + size, &(*root)->doi, prag, size_minim);
@@ -154,24 +154,16 @@ void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
         // printf("size este:%d\n", size);
         // nr blocuri creste cu 1
         if ((*size_minim) < size) (*size_minim) = size;
-        (*root)->tip = '1';
+        (*root)->tip = 1;
         ((*root)->value).red = red;
         ((*root)->value).blue = blue;
         ((*root)->value).green = green;
     }
 }
 
-unsigned int nr_nodes(node *root) {
-    if (root != NULL) {
-        return nr_nodes(root->unu) + nr_nodes(root->doi) + nr_nodes(root->trei) + nr_nodes(root->patru) + 1;
-    }
-    else
-        return 0;
-}
-
 void nr_leaves(node *root, unsigned int *lvs) {
     if (root != NULL) {
-        if (root->tip == '1') (*lvs)++;
+        if (root->tip == 1) (*lvs)++;
         nr_leaves(root->unu, lvs);
         nr_leaves(root->doi, lvs);
         nr_leaves(root->trei, lvs);
@@ -197,9 +189,6 @@ unsigned int get_depth(node *root) {
     }
 }
 
-void compresie(node *root, FILE *out, int viz[]) {
-
-}
 void delete_arb(node *root) {
     // daca nu ne aflam pe ultimul nivel
     if (root != NULL) {
@@ -217,6 +206,68 @@ void delete_imag(pixel **grid, unsigned int size) {
         free(grid[i]);
     }
     free(grid);
+}
+
+// void print_node(node *p, FILE *out) {
+//     fwrite(p->tip, sizeof(p->tip), 1, out);
+//     if (p->tip == 1) {
+//         fwrite(p->value, sizeof(p->value), 1, out);
+//     }
+// }
+
+void compresie(node *root, FILE *out) {
+    root->viz = 1;
+    queue *q;
+    q = initQ();
+    addQ(q, root);
+    // printf("root %u\n", (q->tail)->elem->viz);
+    node *current;
+    while (!emptyQ(q)) {
+        // luam elementul din capul cozii
+        current = q->front->elem;
+        // printf("current %u\n", current->viz);
+        // il stergem din coada
+        popQ(q);
+        // printf("current %u\n", current->viz);
+        // afisam nodul din coada
+        // print_node(current, out);
+
+        fwrite(&current->tip, sizeof(current->tip), 1, out);
+        if (current->tip == 1) {
+            fwrite(&current->value.red, sizeof(current->value.red), 1, out);
+            fwrite(&current->value.green, sizeof(current->value.green), 1, out);
+            fwrite(&current->value.blue, sizeof(current->value.blue), 1, out);
+        }
+        // printf("current_tip %u\n", current->tip);
+        if(current->tip == 0)
+        {
+            if (current->unu->viz == 0) {
+            current->unu->viz = 2;
+            addQ(q, current->unu);
+            // printf("unu %u\n", (q->tail)->elem->viz);
+            }
+
+            if (current->doi->viz == 0) {
+                current->doi->viz = 3;
+                addQ(q, current->doi);
+                // printf("doi %u\n", (q->tail)->elem->viz);
+            }
+
+            if (current->trei->viz == 0) {
+                current->trei->viz = 4;
+                addQ(q, current->trei);
+                // printf("ttrei %u\n", (q->tail)->elem->viz);
+            }
+
+            if (current->patru->viz == 0) {
+                current->patru->viz = 5;
+                addQ(q, current->patru);
+                // printf("patru %u\n", (q->tail)->elem->viz);
+            }
+        }
+
+    }
+
 }
 
 int main(int argc, char const *argv[]) {
@@ -321,16 +372,14 @@ int main(int argc, char const *argv[]) {
         unsigned int size_minim = 0;
         create_arb(imag, size, 0, 0, &root, prag, &size_minim);
 
-        unsigned int nr_noduri = nr_nodes(root);
-        printf("cate noduri avem %u\n", nr_noduri);
-        int *viz = (int *)calloc(nr_noduri, sizeof(int));
+        fwrite(&size, sizeof(size), 1, out);
+        compresie(root, out);
         // eliberam memoria si inchidem fisierele
         delete_arb(root);
         delete_imag(imag, size);
         fclose(in);
         fclose(out);
     }
-
     // queue *q;
     // q = initQ();
 
