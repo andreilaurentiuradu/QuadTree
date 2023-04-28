@@ -53,8 +53,8 @@ void popQ(queue *q) {
     q->front = u->next;
 
     // eliberam memoria alocata pentru campul elem(node *) si qcell in sine
-    // free(u->elem);
-    // free(u);
+    free(u->elem);
+    free(u);
 }
 
 // // adaugam in coada(head, element, element, element, tail)
@@ -130,14 +130,16 @@ node *create_node() {
     new_node->unu = new_node->doi = new_node->trei = new_node->patru = NULL;
     return new_node;
 }
-// int nr_nod;
+
+
+int nr_nod;
 void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
                 node **root, ull prag, unsigned int *size_minim) {
     ull red = med_red(grid, size, x, y);
     ull blue = med_blue(grid, size, x, y);
     ull green = med_green(grid, size, x, y);
     ull mean = mean_func(grid, size, x, y, red, green, blue);
-    // ++nr_nod;
+    ++nr_nod;
     // printf("nr_nod:%u   red:%llu   green:%llu   blue:%llu  mean:%llu\n",
     //  nr_nod, red, green, blue, mean);
     (*root) = create_node();
@@ -215,23 +217,17 @@ void delete_imag(pixel **grid, unsigned int size) {
 //     }
 // }
 
-void compresie(node *root, FILE *out) {
+void compresie(queue *q, node *root, FILE *out) {
     root->viz = 1;
-    queue *q;
-    q = initQ();
+
     addQ(q, root);
-    // printf("root %u\n", (q->tail)->elem->viz);
     node *current;
+
     while (!emptyQ(q)) {
         // luam elementul din capul cozii
         current = q->front->elem;
-        // printf("current %u\n", current->viz);
-        // il stergem din coada
-        popQ(q);
-        // printf("current %u\n", current->viz);
-        // afisam nodul din coada
-        // print_node(current, out);
 
+        // afisam nodul din coada
         fwrite(&current->tip, sizeof(current->tip), 1, out);
         if (current->tip == 1) {
             fwrite(&current->value.red, sizeof(current->value.red), 1, out);
@@ -239,12 +235,11 @@ void compresie(node *root, FILE *out) {
             fwrite(&current->value.blue, sizeof(current->value.blue), 1, out);
         }
         // printf("current_tip %u\n", current->tip);
-        if(current->tip == 0)
-        {
+        if (current->tip == 0) {
             if (current->unu->viz == 0) {
-            current->unu->viz = 2;
-            addQ(q, current->unu);
-            // printf("unu %u\n", (q->tail)->elem->viz);
+                current->unu->viz = 2;
+                addQ(q, current->unu);
+                // printf("unu %u\n", (q->tail)->elem->viz);
             }
 
             if (current->doi->viz == 0) {
@@ -265,75 +260,14 @@ void compresie(node *root, FILE *out) {
                 // printf("patru %u\n", (q->tail)->elem->viz);
             }
         }
-
+        // il stergem din coada
+        popQ(q);
     }
-
 }
 
 int main(int argc, char const *argv[]) {
-    // facem pentru cerinta 1
-    if (strcmp(argv[1], "-c1") == 0) {
-        // fisierul din care citim(primit ca argument in linia de comanda)
-        FILE *in = fopen(argv[3], "rb");
-
-        // fisierul in care afisam(primit ca argument in linia de comanda)
-        FILE *out = fopen(argv[4], "wb");
-
-        // citim tipul fisierului
-        char tip_fisier[2];
-        fscanf(in, "%s\n", tip_fisier);
-
-        // citim cele 3 informatii
-        unsigned int height, width, max_color;
-        fscanf(in, "%u %u %u", &height, &width, &max_color);
-        char spatiu;
-        fscanf(in, "%c", &spatiu);
-
-        // citim matricea ce reprezinta poza
-        pixel **imag = (pixel **)malloc(height * sizeof(pixel *));
-        unsigned int i, j;
-
-        // citim imaginea din zona binara
-        for (i = 0; i < height; ++i) {
-            imag[i] = (pixel *)malloc(width * sizeof(pixel));
-            for (j = 0; j < width; ++j) {
-                fread(&imag[i][j], sizeof(imag[i][j]), 1, in);
-            }
-        }
-
-        // size va fi height sau width fiin matrice patratica
-        unsigned int size = height;
-
-        // root va retine radacina arborelui cuaternar
-        node *root = NULL;
-        ull prag = atoi(argv[2]);
-
-        unsigned int size_minim = 0;
-        create_arb(imag, size, 0, 0, &root, prag, &size_minim);
-        // order(root);
-
-        // parcurgem arborele si aflam nr de nivele
-        unsigned int levels = get_depth(root);
-        unsigned int blocks = 0;
-        nr_leaves(root, &blocks);
-
-        // nr de nivele din arbore este corect
-        fprintf(out, "%u\n", levels);
-        // nr de blocuri este nr de frunze(pica testele 4-5, nimeni nu stie dc)
-        fprintf(out, "%u\n", blocks);
-        // fprintf(out, "\n");
-
-        // latura cea mai mare(practic frunzele de pe cel mai sus nivel)
-        fprintf(out, "%u\n", size_minim);
-
-        // eliberam memoria si inchidem fisierele
-        delete_arb(root);
-        delete_imag(imag, size);
-        fclose(in);
-        fclose(out);
-    }
-
-    if (strcmp(argv[1], "-c2") == 0) {
+    // facem pentru cerintele 1-2
+    if (strcmp(argv[1], "-c1") == 0 || strcmp(argv[1], "-c2") == 0) {
         // fisierul din care citim(primit ca argument in linia de comanda)
         FILE *in = fopen(argv[3], "rb");
 
@@ -372,37 +306,45 @@ int main(int argc, char const *argv[]) {
         unsigned int size_minim = 0;
         create_arb(imag, size, 0, 0, &root, prag, &size_minim);
 
-        fwrite(&size, sizeof(size), 1, out);
-        compresie(root, out);
-        // eliberam memoria si inchidem fisierele
-        delete_arb(root);
-        delete_imag(imag, size);
+        if (strcmp(argv[1], "-c1") == 0) {
+            // parcurgem arborele si aflam nr de nivele
+            unsigned int levels = get_depth(root);
+            unsigned int blocks = 0;
+            nr_leaves(root, &blocks);
+
+            // nr de nivele din arbore este corect
+            fprintf(out, "%u\n", levels);
+            // nr de blocuri este nr de frunze(pica testele 4-5, nimeni nu stie
+            // dc)
+            fprintf(out, "%u\n", blocks);
+            // fprintf(out, "\n");
+
+            // latura cea mai mare(practic frunzele de pe cel mai sus nivel)
+            fprintf(out, "%u\n", size_minim);
+
+            // eliberam memoria
+            delete_arb(root);
+            delete_imag(imag, size);
+        } else {
+            fwrite(&size, sizeof(size), 1, out);
+            queue *q;
+            q = initQ();
+            compresie(q, root, out);
+            free(q);
+            delete_imag(imag, size);
+            // delete_arb(root);
+            printf("nr_nod:%d\n", nr_nod);
+        }
+
+        // inchidem fisierele
         fclose(in);
         fclose(out);
     }
-    // queue *q;
-    // q = initQ();
 
-    // node *nou = create_node();
-    // (nou->value).blue = 1;
-    // addQ(q, nou);
-    // (nou->value).blue = 2;
-    // addQ(q, nou);
-    // (nou->value).blue = 3;
-    // addQ(q, nou);
-    // printf("%u\n", (q->tail)->elem->value.blue);
-    // // popQ(q);
-    // if (!emptyQ(q)) {
-    //     printf("nu e goala\n");
-    // } else
-    //     printf(" este goasla\n");
     return 0;
 }
 
 /*TO DO
-// cerinta 2(compresia) pui in binar 0 daca e interior sau 1 si rgb daca e
-frunza
-    // faci bfs si afisezi progresiv
 // cerinta 3(decompresia)
     //1 cand e 0 il bagi in coada
     //2 daca nu e 0 citesti rgb
