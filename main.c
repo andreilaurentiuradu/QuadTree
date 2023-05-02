@@ -10,7 +10,6 @@ typedef struct pixel {
 
 typedef struct Node {
     pixel value;
-    int viz;
     unsigned char tip;
     struct Node *unu, *doi, *trei, *patru;
 } node;
@@ -216,7 +215,12 @@ void delete_imag(pixel **grid, unsigned int size) {
 }
 
 // functia pentru compresia imaginii este un bfs
-void compresie(queue *q, node *root, FILE *out) {
+void compresie(node *root, FILE *out) {
+    // cream o coada
+    queue *q;
+    // alocam memorie pentru coada
+    q = initQ();
+
     // adaugam radacina in coada si o marcam ca vizitata
     addQ(q, root);
     node *current;
@@ -245,8 +249,10 @@ void compresie(queue *q, node *root, FILE *out) {
         // stergem din coada primul element
         popQ(q);
     }
+    free(q);
 }
 
+// cream arborele pe baza compresiei imaginii
 void decompresie(node **root, queue *q, FILE *in) {
     node *current;
     // adaugam radacina in coada
@@ -279,8 +285,11 @@ void decompresie(node **root, queue *q, FILE *in) {
             current->value.green = green;
             current->value.blue = blue;
         }
+        // stergem primul element din coada
         popQ(q);
     }
+    // eliberam memoria pentru coada
+    free(q);
 }
 
 // cream matricea pe baza arborelui
@@ -307,14 +316,14 @@ void create_matrix(node *root, pixel ***decom, unsigned int size, int x,
 }
 
 int main(int argc, char const *argv[]) {
-
+    FILE *in, *out;
     // cerintele 1-2
     if (strcmp(argv[1], "-c1") == 0 || strcmp(argv[1], "-c2") == 0) {
         // fisierul din care citim(primit ca argument in linia de comanda)
-        FILE *in = fopen(argv[3], "rb");
+        in = fopen(argv[3], "rb");
 
         // fisierul in care afisam(primit ca argument in linia de comanda)
-        FILE *out = fopen(argv[4], "wb");
+        out = fopen(argv[4], "wb");
 
         // citim tipul fisierului
         char tip_fisier[2];
@@ -370,26 +379,23 @@ int main(int argc, char const *argv[]) {
             fprintf(out, "%u\n", size_maxim);
 
         } else {
+            // pentru cerinta 2
+
+            // afisam dimensiunea
             fwrite(&size, sizeof(size), 1, out);
-            queue *q;
-            q = initQ();
-            compresie(q, root, out);
-            free(q);
+            // facem compresia imaginii
+            compresie(root, out);
         }
 
         // eliberam memoria
         delete_arb(root);
         delete_imag(imag, size);
-
-        // inchidem fisierele
-        fclose(in);
-        fclose(out);
     } else {
         // fisierul din care citim(primit ca argument in linia de comanda)
-        FILE *in = fopen(argv[2], "rb");
+        in = fopen(argv[2], "rb");
 
         // fisierul in care afisam(primit ca argument in linia de comanda)
-        FILE *out = fopen(argv[3], "wb");
+        out = fopen(argv[3], "wb");
 
         unsigned int size;
         fread(&size, sizeof(size), 1, in);
@@ -415,22 +421,23 @@ int main(int argc, char const *argv[]) {
         fprintf(out, "%u %u\n", size, size);
         fprintf(out, "255\n");
 
+        // afisam matricea in fisierul ppm
         for (int i = 0; i < size; ++i) {
             for (int j = 0; j < size; ++j) {
-                // printf("decom red %u green %u blue %u\n", decom[i][j].red,
-                // decom[i][j].green, decom[i][j].blue);
                 fwrite(&decom[i][j].red, sizeof(decom[i][j].red), 1, out);
                 fwrite(&decom[i][j].green, sizeof(decom[i][j].green), 1, out);
                 fwrite(&decom[i][j].blue, sizeof(decom[i][j].blue), 1, out);
             }
         }
-        free(q);
+
+        // eliberam memoria
         delete_imag(decom, size);
         delete_arb(root);
-
-        // inchidem fisierele
-        fclose(in);
-        fclose(out);
     }
+
+    // inchidem fisierele
+    fclose(in);
+    fclose(out);
+
     return 0;
 }
