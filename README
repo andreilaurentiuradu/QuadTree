@@ -1,0 +1,28 @@
+// Radu Andrei-Laurentiu 312CC Tema2
+Compresia imaginilor utilizând arbori
+
+Problema consta in 3 taskuri:
+1 determinarea unor statistici pe baza arborelui cuaternar ce va
+retine o imagine:
+    - citim datele din fisierul ppm
+    - construim arborele pe baza matricii rgb din fisier si a factorului
+    primit ca parametru in linia de comanda
+    - afisam nr de nivele printr-o parcurgere in adancime
+    - afisam nr de blocuri(este numarul de frunze al arborelui)
+    - afisam latura cea mai mare nedivizata(cel mai inalt nivel
+    pe care avem frunze)
+2 realizarea compresiei unei imagini
+    - facem un bfs pe arbore afisand 0 pentru nod intern si 1 si rgb pentru
+    frunza
+3 realizarea decompresiei unei imagini(inversa compresiei)
+    - recream arborele punand intr-o coada la fiecare pas
+    fiii daca nodul de adaugat este intern/rgb-ul nodului daca este frunza
+    - recream matricea pe baza arborelui cuaternar
+    - afisam intr-un fisier ppm tipul fisierului, dimensiunile,
+    valoarea maxima si matricea in binar
+
+Cerinta 1 : 20
+Cerinta 2 : 30.0
+Cerinta 3 : 30.0
+Total     : 80.0
+Bonus     : 20.0
