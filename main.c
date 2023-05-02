@@ -21,6 +21,7 @@ typedef struct qCell {
     struct qCell *next;
 } qcell;
 
+// structura de tip coada
 typedef struct Queue {
     qcell *front, *tail;
 } queue;
@@ -33,6 +34,7 @@ qcell *initQCell(node *elem) {
     return p;
 }
 
+// initializam coada
 queue *initQ() {
     queue *q = (queue *)malloc(sizeof(queue));
     q->front = q->tail = NULL;
@@ -51,11 +53,11 @@ void popQ(queue *q) {
     qcell *u = q->front;
     q->front = u->next;
 
-    // eliberam memoria alocata pentru qcell in sine
+    // eliberam memoria alocata pentru qcell
     free(u);
 }
 
-// // adaugam in coada(head, element, element, element, tail)
+// adaugam in coada
 void addQ(queue *q, node *elem) {
     // cream un nou element de adaugat in coada
     qcell *nou = initQCell(elem);
@@ -70,12 +72,13 @@ void addQ(queue *q, node *elem) {
     }
 }
 
+// calculam folosind formula data pentru media valorilor unui bloc
 ull med_red(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     ull red = 0;
     unsigned int i, j;
     for (i = x; i < x + size; ++i) {
         for (j = y; j < y + size; ++j) {
-            red += (grid[i][j].red);
+            red += grid[i][j].red;
         }
     }
     return red / (size * size);
@@ -86,7 +89,7 @@ ull med_green(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     unsigned int i, j;
     for (i = x; i < x + size; ++i) {
         for (j = y; j < y + size; ++j) {
-            green += (grid[i][j].green);
+            green += grid[i][j].green;
         }
     }
     return green / (size * size);
@@ -97,21 +100,22 @@ ull med_blue(pixel **grid, unsigned int size, unsigned int x, unsigned int y) {
     unsigned int i, j;
     for (i = x; i < x + size; ++i) {
         for (j = y; j < y + size; ++j) {
-            blue += (grid[i][j].blue);
+            blue += grid[i][j].blue;
         }
     }
     return blue / (size * size);
 }
 
+// aflam scorul similaritatii
 ull mean_func(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
               ull red, ull green, ull blue) {
     ull mean = 0;
     unsigned int i, j;
     for (i = x; i < x + size; ++i) {
         for (j = y; j < y + size; ++j) {
-            mean += (red - (grid[i][j].red)) * (red - (grid[i][j].red));
-            mean += (green - (grid[i][j].green)) * (green - (grid[i][j].green));
-            mean += (blue - (grid[i][j].blue)) * (blue - (grid[i][j].blue));
+            mean += (red - grid[i][j].red) * (red - grid[i][j].red);
+            mean += (green - grid[i][j].green) * (green - grid[i][j].green);
+            mean += (blue - grid[i][j].blue) * (blue - grid[i][j].blue);
         }
     }
     mean = mean / (3 * size * size);
@@ -119,35 +123,40 @@ ull mean_func(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
     return mean;
 }
 
+// alocam memorie pentru o variabila de tip node
 node *create_node() {
     node *new_node = (node *)malloc(sizeof(node));
     new_node->tip = 0;
-    new_node->viz = 0;
     (new_node->value).blue = (new_node->value).red = (new_node->value).green =
         0;
     new_node->unu = new_node->doi = new_node->trei = new_node->patru = NULL;
     return new_node;
 }
 
+// cream arborele cuaternar
 void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
-                node **root, ull prag, unsigned int *size_minim) {
+                node **root, ull prag, unsigned int *size_maxim) {
     ull red = med_red(grid, size, x, y);
     ull blue = med_blue(grid, size, x, y);
     ull green = med_green(grid, size, x, y);
     ull mean = mean_func(grid, size, x, y, red, green, blue);
     (*root) = create_node();
 
+    // daca scorul similaritatii este mai mare decat pragul atunci impartim
+    // matricea in 4
     if (mean > prag) {
-        (*root)->tip = 0;  // nu e frunza
+        // nu e frunza
+        (*root)->tip = 0;
+        // impartim matricea in 4
         size /= 2;
-        create_arb(grid, size, x, y, &(*root)->unu, prag, size_minim);
-        create_arb(grid, size, x, y + size, &(*root)->doi, prag, size_minim);
+        create_arb(grid, size, x, y, &(*root)->unu, prag, size_maxim);
+        create_arb(grid, size, x, y + size, &(*root)->doi, prag, size_maxim);
         create_arb(grid, size, x + size, y + size, &(*root)->trei, prag,
-                   size_minim);
-        create_arb(grid, size, x + size, y, &(*root)->patru, prag, size_minim);
+                   size_maxim);
+        create_arb(grid, size, x + size, y, &(*root)->patru, prag, size_maxim);
     } else {
         // nr blocuri creste cu 1
-        if ((*size_minim) < size) (*size_minim) = size;
+        if ((*size_maxim) < size) (*size_maxim) = size;
         (*root)->tip = 1;
         ((*root)->value).red = red;
         ((*root)->value).blue = blue;
@@ -155,6 +164,7 @@ void create_arb(pixel **grid, unsigned int size, unsigned int x, unsigned int y,
     }
 }
 
+// calculam nr de frunze ale arborelui
 void nr_leaves(node *root, unsigned int *lvs) {
     if (root != NULL) {
         if (root->tip == 1) (*lvs)++;
@@ -165,6 +175,7 @@ void nr_leaves(node *root, unsigned int *lvs) {
     }
 }
 
+// aflam nr de nivele
 unsigned int get_depth(node *root) {
     if (root == NULL) {
         return 0;
@@ -183,6 +194,7 @@ unsigned int get_depth(node *root) {
     }
 }
 
+// stergem arborele
 void delete_arb(node *root) {
     // daca nu ne aflam pe ultimul nivel
     if (root != NULL) {
@@ -194,6 +206,7 @@ void delete_arb(node *root) {
     }
 }
 
+// stergem matricea ce contine imaginea
 void delete_imag(pixel **grid, unsigned int size) {
     unsigned int i;
     for (i = 0; i < size; ++i) {
@@ -202,19 +215,13 @@ void delete_imag(pixel **grid, unsigned int size) {
     free(grid);
 }
 
-// void print_node(node *p, FILE *out) {
-//     fwrite(p->tip, sizeof(p->tip), 1, out);
-//     if (p->tip == 1) {
-//         fwrite(p->value, sizeof(p->value), 1, out);
-//     }
-// }
-
+// functia pentru compresia imaginii este un bfs
 void compresie(queue *q, node *root, FILE *out) {
-    root->viz = 1;
-
+    // adaugam radacina in coada si o marcam ca vizitata
     addQ(q, root);
     node *current;
 
+    // cat timp coada nu e goala
     while (!emptyQ(q)) {
         // luam elementul din capul cozii
         current = q->front->elem;
@@ -226,69 +233,48 @@ void compresie(queue *q, node *root, FILE *out) {
             fwrite(&current->value.green, sizeof(current->value.green), 1, out);
             fwrite(&current->value.blue, sizeof(current->value.blue), 1, out);
         }
-        // printf("current_tip %u\n", current->tip);
+
+        // verificam daca e nod intern
         if (current->tip == 0) {
-            if (current->unu->viz == 0) {
-                current->unu->viz = 2;
-                addQ(q, current->unu);
-                // printf("unu %u\n", (q->tail)->elem->viz);
-            }
-
-            if (current->doi->viz == 0) {
-                current->doi->viz = 3;
-                addQ(q, current->doi);
-                // printf("doi %u\n", (q->tail)->elem->viz);
-            }
-
-            if (current->trei->viz == 0) {
-                current->trei->viz = 4;
-                addQ(q, current->trei);
-                // printf("ttrei %u\n", (q->tail)->elem->viz);
-            }
-
-            if (current->patru->viz == 0) {
-                current->patru->viz = 5;
-                addQ(q, current->patru);
-                // printf("patru %u\n", (q->tail)->elem->viz);
-            }
+            // adaugam fiii in coada
+            addQ(q, current->unu);
+            addQ(q, current->doi);
+            addQ(q, current->trei);
+            addQ(q, current->patru);
         }
-        // il stergem din coada
+        // stergem din coada primul element
         popQ(q);
     }
 }
 
 void decompresie(node **root, queue *q, FILE *in) {
-    // unsigned char tip;
     node *current;
+    // adaugam radacina in coada
     addQ(q, (*root));
-    int nr_nods = 0;
     while (!emptyQ(q)) {
-        current = q->front->elem; //  adresa nodului curent din coada
+        //  adresa nodului curent din coada
+        current = q->front->elem;
         fread(&current->tip, sizeof(current->tip), 1, in);
 
-
+        // daca e nod intern alocam memorie pentru fii
+        // si ii adaugam in coada
         if (current->tip == 0) {
-                current->unu = create_node();
-                current->unu->viz = ++nr_nods;
-                addQ(q, current->unu);
-                current->doi = create_node();
-                current->doi->viz = ++nr_nods;
-                addQ(q, current->doi);
-                current->trei = create_node();
-                current->trei->viz = ++nr_nods;
-                addQ(q, current->trei);
-                current->patru = create_node();
-                current->patru->viz = ++nr_nods;
-                addQ(q, current->patru);
+            current->unu = create_node();
+            addQ(q, current->unu);
+            current->doi = create_node();
+            addQ(q, current->doi);
+            current->trei = create_node();
+            addQ(q, current->trei);
+            current->patru = create_node();
+            addQ(q, current->patru);
         }
-        if(current->tip == 1)
-        {
+
+        // daca e frunza adaugam rgb.ul nodului
+        if (current->tip == 1) {
             unsigned char red, green, blue;
             fread(&red, sizeof(red), 1, in);
             fread(&green, sizeof(green), 1, in);
             fread(&blue, sizeof(blue), 1, in);
-            // printf("intra red:%u    green:%u    blue:%u\n", red,
-            //        green, blue);
             current->value.red = red;
             current->value.green = green;
             current->value.blue = blue;
@@ -297,43 +283,32 @@ void decompresie(node **root, queue *q, FILE *in) {
     }
 }
 
-// void order(node *root) {
-//     if (root != NULL) {
-//         // printf("unsigned intraaaaa????????????\n");
-//         printf("nr_nod:%u\n", root->viz);
-//         order(root->unu);
-//         order(root->doi);
-//         order(root->trei);
-//         order(root->patru);
-//     }
-// }
-
-void create_matrix(node *root, pixel ***decom, unsigned int size, int x, int y) {
+// cream matricea pe baza arborelui
+void create_matrix(node *root, pixel ***decom, unsigned int size, int x,
+                   int y) {
     int i, j;
-    if(root != NULL)
-    {
-        if(root->tip == 1){
-            // printf("intra\n");
-            for(i = x; i < x + size; ++i) {
-                for(j = y; j < y + size; ++j){
-                    (*decom)[i][j].red = root->value.red;
-                    (*decom)[i][j].green = root->value.green;
-                    (*decom)[i][j].blue = root->value.blue;
-                }
+    // daca e frunza adaugam rgb-ul in matrice
+    if (root->tip == 1) {
+        for (i = x; i < x + size; ++i) {
+            for (j = y; j < y + size; ++j) {
+                (*decom)[i][j].red = root->value.red;
+                (*decom)[i][j].green = root->value.green;
+                (*decom)[i][j].blue = root->value.blue;
             }
         }
-        else
-        {
-            size /= 2;
-            create_matrix(root->unu, decom, size, x, y);
-            create_matrix(root->doi, decom, size, x, y + size);
-            create_matrix(root->trei, decom, size, x + size, y + size);
-            create_matrix(root->patru, decom, size, x + size, y);
-        }
+    } else {
+        // daca e intern impartim matricea in 4
+        size /= 2;
+        create_matrix(root->unu, decom, size, x, y);
+        create_matrix(root->doi, decom, size, x, y + size);
+        create_matrix(root->trei, decom, size, x + size, y + size);
+        create_matrix(root->patru, decom, size, x + size, y);
     }
 }
+
 int main(int argc, char const *argv[]) {
-    // facem pentru cerintele 1-2
+
+    // cerintele 1-2
     if (strcmp(argv[1], "-c1") == 0 || strcmp(argv[1], "-c2") == 0) {
         // fisierul din care citim(primit ca argument in linia de comanda)
         FILE *in = fopen(argv[3], "rb");
@@ -348,6 +323,8 @@ int main(int argc, char const *argv[]) {
         // citim cele 3 informatii
         unsigned int height, width, max_color;
         fscanf(in, "%u %u %u", &height, &width, &max_color);
+
+        // citim enterul
         char spatiu;
         fscanf(in, "%c", &spatiu);
 
@@ -363,31 +340,34 @@ int main(int argc, char const *argv[]) {
             }
         }
 
-        // size va fi height sau width fiin matrice patratica
+        // size va fi height sau width fiind matrice patratica
         unsigned int size = height;
 
         // root va retine radacina arborelui cuaternar
         node *root = NULL;
+
+        // pragul primit ca argument in linia de comanda
         ull prag = atoi(argv[2]);
 
-        unsigned int size_minim = 0;
-        create_arb(imag, size, 0, 0, &root, prag, &size_minim);
+        // latura de lungime maxima
+        unsigned int size_maxim = 0;
+        create_arb(imag, size, 0, 0, &root, prag, &size_maxim);
 
+        // pentru cerinta 1
         if (strcmp(argv[1], "-c1") == 0) {
             // parcurgem arborele si aflam nr de nivele
             unsigned int levels = get_depth(root);
             unsigned int blocks = 0;
             nr_leaves(root, &blocks);
 
-            // nr de nivele din arbore este corect
+            // nr de nivele din arbore
             fprintf(out, "%u\n", levels);
-            // nr de blocuri este nr de frunze(pica testele 4-5, nimeni nu stie
-            // dc)
+            // nr de blocuri este nr de frunze
             fprintf(out, "%u\n", blocks);
             // fprintf(out, "\n");
 
-            // latura cea mai mare(practic frunzele de pe cel mai sus nivel)
-            fprintf(out, "%u\n", size_minim);
+            // latura cea mai mare(frunzele de pe cel mai sus nivel)
+            fprintf(out, "%u\n", size_maxim);
 
         } else {
             fwrite(&size, sizeof(size), 1, out);
@@ -395,7 +375,6 @@ int main(int argc, char const *argv[]) {
             q = initQ();
             compresie(q, root, out);
             free(q);
-            // printf("nr_nod:%d\n", nr_nod);
         }
 
         // eliberam memoria
@@ -418,33 +397,37 @@ int main(int argc, char const *argv[]) {
         node *root = create_node();
         queue *q;
         q = initQ();
-        // printf("size: %u\n", size);
+
+        // alocam memorie pentru matricea imaginii
         pixel **decom = (pixel **)malloc(size * sizeof(pixel *));
-        for(int i = 0; i < size; ++i) {
+        for (int i = 0; i < size; ++i) {
             decom[i] = (pixel *)malloc(sizeof(pixel) * size);
         }
+
+        // cream arborele
         decompresie(&root, q, in);
 
-
-        // printf("root%u\n", root->viz);
-        // order(root);
-        // printf("root->tip %u\n", root->unu->tip);
+        // cream matricea pe baza arborelui
         create_matrix(root, &decom, size, 0, 0);
 
+        // afisam tipul fisierului, dimensiunile si valoarea maxima ale matricei
         fprintf(out, "P6\n");
         fprintf(out, "%u %u\n", size, size);
         fprintf(out, "255\n");
-        for(int i = 0; i < size; ++i) {
-            for(int j = 0; j < size; ++j) {
-                // printf("decom red %u green %u blue %u\n", decom[i][j].red, decom[i][j].green, decom[i][j].blue);
+
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
+                // printf("decom red %u green %u blue %u\n", decom[i][j].red,
+                // decom[i][j].green, decom[i][j].blue);
                 fwrite(&decom[i][j].red, sizeof(decom[i][j].red), 1, out);
                 fwrite(&decom[i][j].green, sizeof(decom[i][j].green), 1, out);
                 fwrite(&decom[i][j].blue, sizeof(decom[i][j].blue), 1, out);
             }
         }
+        free(q);
         delete_imag(decom, size);
         delete_arb(root);
-        free(q);
+
         // inchidem fisierele
         fclose(in);
         fclose(out);
